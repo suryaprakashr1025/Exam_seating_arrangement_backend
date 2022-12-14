@@ -13,7 +13,8 @@ const JWT_SECRET = process.env.JWT_SECRET
 const app = express()
 
 app.use(cors({
-    origin: "http://localhost:3000",
+   // origin: "http://localhost:3000",
+    origin:"https://harmonious-rugelach-13c182.netlify.app/"
 }))
 app.use(express.json())
 
