@@ -420,4 +420,4 @@ app.post("/user/forgetpassword", async (req, res) => {
     }
 })
 
-app.listen(process.env.PORT || 3010)
+app.listen(3010)
