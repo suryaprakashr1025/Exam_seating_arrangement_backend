@@ -14,7 +14,7 @@ const app = express()
 
 app.use(cors({
    // origin: "http://localhost:3000",
-    origin:"https://harmonious-rugelach-13c182.netlify.app"
+    origin:"https://harmonious-rugelach-13c182.netlify.app",
 }))
 app.use(express.json())
 
