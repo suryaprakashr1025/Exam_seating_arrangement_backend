@@ -14,7 +14,8 @@ const app = express()
 
 app.use(cors({
    // origin: "http://localhost:3000",
-    origin:"https://harmonious-rugelach-13c182.netlify.app",
+    // origin:"https://harmonious-rugelach-13c182.netlify.app",
+    origin:"*",
 }))
 app.use(express.json())
 
@@ -420,4 +421,167 @@ app.post("/user/forgetpassword", async (req, res) => {
     }
 })
 
+
+
+//ADMIN DASHBOARD 
+//HALL DETAILS
+
+//POST THE HALL DETAILS
+app.post("/createhall",async(req,res)=>{
+    try{
+        const connection = await mongoClient.connect(URL)
+        const db = connection.db("Exam_seating_arrangement")
+
+        const findBlock = await db.collection("hall").find({block:req.body.block}).toArray()
+        console.log(findBlock)
+        console.log(findBlock.length)
+
+        let hallno = req.body.hall
+        console.log(hallno)
+
+        let startletter = hallno.startsWith(req.body.block)
+        console.log(startletter)
+
+        const findhall = findBlock.some(hno =>{
+            return hno.hall === hallno
+        })
+        console.log(findhall)
+         
+       
+        if(findBlock.length === 0 && startletter){
+            const hall = await db.collection("hall").insertOne(req.body)
+            console.log("hall1")
+            res.json({message:"hall created"})
+
+        }else if(findBlock.length >0 && !findhall && startletter){
+            const hall = await db.collection("hall").insertOne(req.body)
+            console.log("hall2")
+            res.json({message:"hall created"})
+
+        }else{
+            res.json({message:"Hall number already exists"})
+        }
+        
+        await connection.close()
+    }catch(error){
+        res.status(500).json({message:"createhall error"})
+    }
+})
+
+//GET THE HALL DETAILS
+app.get("/gethall",async(req,res)=>{
+    try{
+        const connection = await mongoClient.connect(URL)
+        const db = connection.db("Exam_seating_arrangement")
+        const gethall = await db.collection("hall").find().toArray()
+        res.json(gethall)
+        await connection.close()
+    }catch(error){
+        res.status(500).json({message:"gethall error"})
+    }
+})
+
+//UPDATE THE HALL DETAILS
+app.put("/updatehall/:hallid",async(req,res)=>{
+    try{
+        const connection = await mongoClient.connect(URL)
+        const db = connection.db("Exam_seating_arrangement")
+      
+        const findhall = await db.collection("hall").findOne({_id:mongodb.ObjectId(req.params.hallid)})
+        // console.log(findhall.hall)
+
+        const gethall = await db.collection("hall").find({hall:{$nin:[findhall.hall]}}).toArray()
+        // console.log(gethall)
+
+        let hallno = req.body.hall
+        // console.log(hallno)
+
+        let startletter = hallno.startsWith(req.body.block)
+        // console.log(startletter)
+
+        const checkhall = gethall.some(hno =>{
+            return hno.hall === hallno
+        })
+
+        // console.log(checkhall)
+
+        if(findhall && !checkhall && startletter){
+            const updatehall = await db.collection("hall").updateOne({_id:mongodb.ObjectId(req.params.hallid)},{$set:req.body})
+            res.json({message:"Hall updated successfully"})
+        }else{
+            res.json({message:"Hall is not found"})
+        }
+       await connection.close()
+    }catch(error){
+        res.status(500).json({message:"Updatehall error"})
+    }
+})
+
+//DELETE THE HALL DETAILS
+app.delete("/deletehall/:hallid",async(req,res)=>{
+    try{
+        const connection = await mongoClient.connect(URL)
+        const db = connection.db("Exam_seating_arrangement")
+        const findhall = await db.collection("hall").findOne({_id:mongodb.ObjectId(req.params.hallid)})
+        if(findhall){
+            const deletehall = await db.collection("hall").deleteOne({_id:mongodb.ObjectId(req.params.hallid)})
+            res.json({message:"Hall deleted"})
+        }else{
+            res.json({message:"Hallid is not found"})
+        }
+        await connection.close()
+    }catch(error){
+        res.status(500).json({message:"Delete hall error"})
+    }
+
+})
+
+
+
+//STAFF DETAILS
+
+//POST STAFF DETAILS
+app.post("/createstaff",async(req,res)=>{
+    try{
+        const connection = await mongoClient.connect(URL)
+        const db = connection.db("Exam_seating_arrangement")
+        const findstaff = await db.collection("staff").find({department:req.body.department}).toArray()
+        console.log(findstaff.length)
+        if(findstaff.length === 0){
+            const createstaff = await db.collection("staff").insertOne(req.body)
+            console.log("staff1")
+            res.json({message:"staff created"})
+        }else if(findstaff.length > 0){
+            const createstaff = await db.collection("staff").insertOne(req.body)
+            console.log("staff2")
+            res.json({message:"staff created"})
+
+            const findstaff = await db.collection("staff").aggregate([
+                {
+                    $match:{department:req.body.department}
+                },
+                {
+                    $sort:{name:1}
+                }
+            ]).toArray()
+
+            console.log(findstaff)
+            console.log(findstaff.length)
+
+            // const updatestaffid = async(index) =>{
+            //     await db.collection("staff").updateOne({department:req.body.department},{$set:{staffid:index}})
+            // }
+            const staff =findstaff.map((staffno,index) =>{
+                return index+101
+            })
+          
+            console.log(staff)
+           
+
+        }
+        await connection.close()
+    }catch(error){
+        res.status(500).json({message:"Create Staff Error"})
+    }
+})
 app.listen(3010)
