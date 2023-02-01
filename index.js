@@ -13,9 +13,9 @@ const JWT_SECRET = process.env.JWT_SECRET
 const app = express()
 
 app.use(cors({
-   // origin: "http://localhost:3000",
+    // origin: "http://localhost:3000",
     // origin:"https://harmonious-rugelach-13c182.netlify.app",
-    origin:"*",
+    origin: "*",
 }))
 app.use(express.json())
 
@@ -272,7 +272,7 @@ app.post("/admin/forgetpassword", async (req, res) => {
 
         //select the datatbase
         const db = connection.db("Exam_seating_arrangement")
-       // console.log("surya")
+        // console.log("surya")
         //select the collection
         //Do operation
         const adminUsername = await db.collection("admin").findOne({ username: req.body.username })
@@ -282,7 +282,7 @@ app.post("/admin/forgetpassword", async (req, res) => {
         if (adminUsername) {
             const adminEmail = req.body.email
             console.log(adminEmail)
-            
+
             if (adminEmail === adminUsername.email) {
                 const salt = await bcrypt.genSalt(2)
                 console.log(salt) //salt.length = 29
@@ -331,7 +331,7 @@ app.post("/admin/forgetpassword", async (req, res) => {
             } else {
                 res.json({ message: "username and email is incorrect" })
             }
-           
+
         } else {
             res.json({ message: "username and email is incorrect" })
         }
@@ -361,8 +361,8 @@ app.post("/user/forgetpassword", async (req, res) => {
         if (userForget) {
             //const userEmail = await db.collection("user").findOne({ email: req.body.email} )
             const userEmail = req.body.email
-           console.log(userEmail)
-            if (userForget.email === userEmail ) {
+            console.log(userEmail)
+            if (userForget.email === userEmail) {
                 const salt = await bcrypt.genSalt(2)
                 console.log(salt)
                 console.log(salt.length)
@@ -408,7 +408,7 @@ app.post("/user/forgetpassword", async (req, res) => {
             } else {
                 res.json({ message: "username and email is incorrect" })
             }
-            
+
         } else {
             res.json({ message: "username and email is incorrect" })
         }
@@ -427,12 +427,12 @@ app.post("/user/forgetpassword", async (req, res) => {
 //HALL DETAILS
 
 //POST THE HALL DETAILS
-app.post("/createhall",async(req,res)=>{
-    try{
+app.post("/createhall", async (req, res) => {
+    try {
         const connection = await mongoClient.connect(URL)
         const db = connection.db("Exam_seating_arrangement")
 
-        const findBlock = await db.collection("hall").find({block:req.body.block}).toArray()
+        const findBlock = await db.collection("hall").find({ block: req.body.block }).toArray()
         console.log(findBlock)
         console.log(findBlock.length)
 
@@ -442,55 +442,55 @@ app.post("/createhall",async(req,res)=>{
         let startletter = hallno.startsWith(req.body.block)
         console.log(startletter)
 
-        const findhall = findBlock.some(hno =>{
+        const findhall = findBlock.some(hno => {
             return hno.hall === hallno
         })
         console.log(findhall)
-         
-       
-        if(findBlock.length === 0 && startletter){
+
+
+        if (findBlock.length === 0 && startletter) {
             const hall = await db.collection("hall").insertOne(req.body)
             console.log("hall1")
-            res.json({message:"hall created"})
+            res.json({ message: "hall created" })
 
-        }else if(findBlock.length >0 && !findhall && startletter){
+        } else if (findBlock.length > 0 && !findhall && startletter) {
             const hall = await db.collection("hall").insertOne(req.body)
             console.log("hall2")
-            res.json({message:"hall created"})
+            res.json({ message: "hall created" })
 
-        }else{
-            res.json({message:"Hall number already exists"})
+        } else {
+            res.json({ message: "Hall number already exists" })
         }
-        
+
         await connection.close()
-    }catch(error){
-        res.status(500).json({message:"createhall error"})
+    } catch (error) {
+        res.status(500).json({ message: "createhall error" })
     }
 })
 
 //GET THE HALL DETAILS
-app.get("/gethall",async(req,res)=>{
-    try{
+app.get("/gethall", async (req, res) => {
+    try {
         const connection = await mongoClient.connect(URL)
         const db = connection.db("Exam_seating_arrangement")
         const gethall = await db.collection("hall").find().toArray()
         res.json(gethall)
         await connection.close()
-    }catch(error){
-        res.status(500).json({message:"gethall error"})
+    } catch (error) {
+        res.status(500).json({ message: "gethall error" })
     }
 })
 
 //UPDATE THE HALL DETAILS
-app.put("/updatehall/:hallid",async(req,res)=>{
-    try{
+app.put("/updatehall/:hallid", async (req, res) => {
+    try {
         const connection = await mongoClient.connect(URL)
         const db = connection.db("Exam_seating_arrangement")
-      
-        const findhall = await db.collection("hall").findOne({_id:mongodb.ObjectId(req.params.hallid)})
+
+        const findhall = await db.collection("hall").findOne({ _id: mongodb.ObjectId(req.params.hallid) })
         // console.log(findhall.hall)
 
-        const gethall = await db.collection("hall").find({hall:{$nin:[findhall.hall]}}).toArray()
+        const gethall = await db.collection("hall").find({ hall: { $nin: [findhall.hall] } }).toArray()
         // console.log(gethall)
 
         let hallno = req.body.hall
@@ -499,39 +499,39 @@ app.put("/updatehall/:hallid",async(req,res)=>{
         let startletter = hallno.startsWith(req.body.block)
         // console.log(startletter)
 
-        const checkhall = gethall.some(hno =>{
+        const checkhall = gethall.some(hno => {
             return hno.hall === hallno
         })
 
         // console.log(checkhall)
 
-        if(findhall && !checkhall && startletter){
-            const updatehall = await db.collection("hall").updateOne({_id:mongodb.ObjectId(req.params.hallid)},{$set:req.body})
-            res.json({message:"Hall updated successfully"})
-        }else{
-            res.json({message:"Hall is not found"})
+        if (findhall && !checkhall && startletter) {
+            const updatehall = await db.collection("hall").updateOne({ _id: mongodb.ObjectId(req.params.hallid) }, { $set: req.body })
+            res.json({ message: "Hall updated successfully" })
+        } else {
+            res.json({ message: "Hall is not found" })
         }
-       await connection.close()
-    }catch(error){
-        res.status(500).json({message:"Updatehall error"})
+        await connection.close()
+    } catch (error) {
+        res.status(500).json({ message: "Updatehall error" })
     }
 })
 
 //DELETE THE HALL DETAILS
-app.delete("/deletehall/:hallid",async(req,res)=>{
-    try{
+app.delete("/deletehall/:hallid", async (req, res) => {
+    try {
         const connection = await mongoClient.connect(URL)
         const db = connection.db("Exam_seating_arrangement")
-        const findhall = await db.collection("hall").findOne({_id:mongodb.ObjectId(req.params.hallid)})
-        if(findhall){
-            const deletehall = await db.collection("hall").deleteOne({_id:mongodb.ObjectId(req.params.hallid)})
-            res.json({message:"Hall deleted"})
-        }else{
-            res.json({message:"Hallid is not found"})
+        const findhall = await db.collection("hall").findOne({ _id: mongodb.ObjectId(req.params.hallid) })
+        if (findhall) {
+            const deletehall = await db.collection("hall").deleteOne({ _id: mongodb.ObjectId(req.params.hallid) })
+            res.json({ message: "Hall deleted" })
+        } else {
+            res.json({ message: "Hallid is not found" })
         }
         await connection.close()
-    }catch(error){
-        res.status(500).json({message:"Delete hall error"})
+    } catch (error) {
+        res.status(500).json({ message: "Delete hall error" })
     }
 
 })
@@ -541,47 +541,250 @@ app.delete("/deletehall/:hallid",async(req,res)=>{
 //STAFF DETAILS
 
 //POST STAFF DETAILS
-app.post("/createstaff",async(req,res)=>{
-    try{
+app.post("/createstaff", async (req, res) => {
+    try {
         const connection = await mongoClient.connect(URL)
         const db = connection.db("Exam_seating_arrangement")
-        const findstaff = await db.collection("staff").find({department:req.body.department}).toArray()
-        console.log(findstaff.length)
-        if(findstaff.length === 0){
+
+        const findstaff = await db.collection("staff").find({ department: req.body.department }).toArray()
+        const findphone = await db.collection("staff").find({ phone: req.body.phone }).toArray()
+        const findemail = await db.collection("staff").find({ email: req.body.email }).toArray()
+
+        const str = req.body.department
+        const matches = str.match(/\b(\w)/g).join("")
+        const convert = [...matches]
+
+        console.log(convert.splice(1, 1))
+        console.log(convert.join(""))
+
+        const final = convert.join("")
+        const number = findstaff.length + 101
+
+        if (findstaff.length === 0 && findphone.length === 0 && findemail.length === 0) {
+
+            req.body.staffid = final + number
             const createstaff = await db.collection("staff").insertOne(req.body)
-            console.log("staff1")
-            res.json({message:"staff created"})
-        }else if(findstaff.length > 0){
+            res.json({ message: "staff created" })
+
+        } else if (findstaff.length > 0 && findphone.length === 0 && findemail.length === 0) {
+
+            req.body.staffid = final + number
             const createstaff = await db.collection("staff").insertOne(req.body)
-            console.log("staff2")
-            res.json({message:"staff created"})
+            res.json({ message: "staff created" })
 
-            const findstaff = await db.collection("staff").aggregate([
-                {
-                    $match:{department:req.body.department}
-                },
-                {
-                    $sort:{name:1}
-                }
-            ]).toArray()
-
-            console.log(findstaff)
-            console.log(findstaff.length)
-
-            // const updatestaffid = async(index) =>{
-            //     await db.collection("staff").updateOne({department:req.body.department},{$set:{staffid:index}})
-            // }
-            const staff =findstaff.map((staffno,index) =>{
-                return index+101
-            })
-          
-            console.log(staff)
-           
-
+        } else {
+            res.json({ message: "Phone number and Email is already exists" })
         }
+
         await connection.close()
-    }catch(error){
-        res.status(500).json({message:"Create Staff Error"})
+    } catch (error) {
+        res.status(500).json({ message: "Create Staff Error" })
     }
 })
+
+//UPDATE STAFF DETAILS
+app.put("/updatestaff/:staffid", async (req, res) => {
+    try {
+        const connection = await mongoClient.connect(URL)
+        const db = connection.db("Exam_seating_arrangement")
+        const updatestaff = await db.collection("staff").findOne({ _id: mongodb.ObjectId(req.params.staffid) })
+        const findphone = await db.collection("staff").find({ phone: { $nin: [updatestaff.phone] } }).toArray()
+        const findemail = await db.collection("staff").find({ email: { $nin: [updatestaff.email] } }).toArray()
+
+        const boophone = findphone.some(ph => {
+            return ph === req.body.phone
+        })
+        // console.log(boophone)
+
+        const booemail = findemail.some(em => {
+            return em === req.body.email
+        })
+        // console.log(booemail)
+
+        if (!boophone && !booemail) {
+            const updatestaff = await db.collection("staff").updateOne({ _id: mongodb.ObjectId(req.params.staffid) }, { $set: req.body })
+            res.json({ message: "Staff Details updated" })
+        } else {
+            res.json({ message: "Phone number and Email is already exists" })
+        }
+        await connection.close()
+    } catch (error) {
+        res.status(500).json({ message: "Updatestaff Error" })
+    }
+})
+
+//GET STAFF DETAILS
+app.get("/getstaff", async (req, res) => {
+    try {
+        const connection = await mongoClient.connect(URL)
+        const db = connection.db("Exam_seating_arrangement")
+        const getStaff = await db.collection("staff").find().toArray()
+        res.json(getStaff)
+        await connection.close()
+    } catch (error) {
+        res.status(500).json({ message: "Get Staff Error" })
+    }
+})
+
+//DELETE STAFF DETAILS
+app.delete("/deletestaff/:staffid", async (req, res) => {
+    try {
+        const connection = await mongoClient.connect(URL)
+        const db = connection.db("Exam_seating_arrangement")
+        const deleteStaff = await db.collection("staff").deleteOne({ _id: mongodb.ObjectId(req.params.staffid) })
+        res.json({ message: "Staff deleted" })
+        await connection.close()
+    } catch (error) {
+        res.status(500).json({ message: "Delete staff error" })
+    }
+})
+
+
+//STUDENT DETAILS
+//POST STUDENT DETAILS
+app.post("/createstudent", async (req, res) => {
+    try {
+        const connection = await mongoClient.connect(URL)
+        const db = connection.db("Exam_seating_arrangement")
+
+        const student = await db.collection("student").find({ department: req.body.department }).toArray()
+        //const year = await db.collection("student").find({ year_of_study: req.body.year_of_study }).toArray()
+        const phone = await db.collection("student").find({ phone: req.body.phone }).toArray()
+        const email = await db.collection("student").find({ email: req.body.email }).toArray()
+
+        const currentYear = new Date()
+
+        let joinyear = [req.body.joinyear].join(",")
+        const year_of_last_two_numbers = joinyear.slice(2, joinyear.length)
+        //console.log(year_of_last_two_numbers)
+
+        const department = req.body.department
+        const first_letters = department.match(/\b(\w)/g).join("")
+
+        const convert_array = [...first_letters]
+        console.log(convert_array.splice(1, 1))
+
+        const join_letters = convert_array.join("")
+
+        const student_id = student.length + 101
+        //console.log(year_of_last_two_numbers + join_letters + student_id)
+
+        joinyear = [req.body.joinyear].join("")
+        //console.log(joinyear)
+
+        req.body.year_of_study = currentYear.getFullYear() - joinyear + "Year"
+        //console.log(req.body.year_of_study)
+
+        if (student.length === 0  && phone.length === 0 && email.length === 0) {
+
+            req.body.student_id = year_of_last_two_numbers + join_letters + student_id
+            const createStudent = await db.collection("student").insertOne(req.body)
+            res.json({ message: "Student created" })
+
+        } else if (student.length > 0  && phone.length === 0 && email.length === 0) {
+
+            req.body.student_id = year_of_last_two_numbers + join_letters + student_id
+            const createStudent = await db.collection("student").insertOne(req.body)
+            res.json({ message: "Student created" })
+
+        }else{
+
+            res.json({message:"Phone number and email-id is already exists"})
+        }
+
+        await connection.close()
+    } catch (error) {
+        res.status(500).json({ message: "Create student error" })
+    }
+})
+
+//UPDATE STUDENT DETAILS
+app.put("/updatestudent/:studentid", async (req, res) => {
+    try {
+        const connection = await mongoClient.connect(URL)
+        const db = connection.db("Exam_seating_arrangement")
+
+        await connection.close()
+    } catch (error) {
+        res.status(500).json({ message: "Update student error" })
+    }
+})
+
+//GET STUDENT DETAILS
+app.get("/getstudent", async (req, res) => {
+    try {
+        const connection = await mongoClient.connect(URL)
+        const db = connection.db("Exam_seating_arrangement")
+
+        await connection.close()
+    } catch (error) {
+        res.status(500).json({ message: "Get student error" })
+    }
+})
+
+//DELETE STUDENT
+app.delete("/deletestudent", async (req, res) => {
+    try {
+        const connection = await mongoClient.connect(URL)
+        const db = connection.db("Exam_seating_arrangement")
+
+        await connection.close()
+    } catch (error) {
+        res.status(500).json({ message: "Delete student error" })
+    }
+})
+
+
+
+
+//EXAM DETAILS
+//POST EXAM DETAILS
+app.post("/createexam", async (req, res) => {
+    try {
+        const connection = await mongoClient.connect(URL)
+        const db = connection.db("Exam_seating_arrangement")
+
+        await connection.close()
+    } catch (error) {
+        res.status(500).json({ message: "Create exam error" })
+    }
+})
+
+//UPDATE EXAM DETAILS
+app.put("/updateexam/:examid", async (req, res) => {
+    try {
+        const connection = await mongoClient.connect(URL)
+        const db = connection.db("Exam_seating_arrangement")
+
+        await connection.close()
+    } catch (error) {
+        res.status(500).json({ message: "Update exam error" })
+    }
+})
+
+//GET EXAM DETAILS
+app.get("/getexam", async (req, res) => {
+    try {
+        const connection = await mongoClient.connect(URL)
+        const db = connection.db("Exam_seating_arrangement")
+
+        await connection.close()
+    } catch (error) {
+        res.status(500).json({ message: "Get exam error" })
+    }
+})
+
+//DELETE EXAM
+app.delete("/deleteexam/:examid", async (req, res) => {
+    try {
+        const connection = await mongoClient.connect(URL)
+        const db = connection.db("Exam_seating_arrangement")
+
+        await connection.close()
+    } catch (error) {
+        res.status(500).json({ message: "Delete exam error" })
+    }
+})
+
+
 app.listen(3010)
