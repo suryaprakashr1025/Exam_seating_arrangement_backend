@@ -648,15 +648,18 @@ app.post("/createstudent", async (req, res) => {
         const db = connection.db("Exam_seating_arrangement")
 
         const student = await db.collection("student").find({ department: req.body.department }).toArray()
-        //const year = await db.collection("student").find({ year_of_study: req.body.year_of_study }).toArray()
+        const department_year = await db.collection("student").find({ $and: [{ department: req.body.department }, { joinyear: req.body.joinyear }] }).toArray()
         const phone = await db.collection("student").find({ phone: req.body.phone }).toArray()
         const email = await db.collection("student").find({ email: req.body.email }).toArray()
 
+        console.log(department_year.length)
+
         const currentYear = new Date()
 
-        let joinyear = [req.body.joinyear].join(",")
-        const year_of_last_two_numbers = joinyear.slice(2, joinyear.length)
-        //console.log(year_of_last_two_numbers)
+        let joinyear = req.body.joinyear
+
+        const year_of_last_two_numbers = [joinyear].join(",").slice(4, joinyear.length)
+        console.log("twonumber:" + year_of_last_two_numbers)
 
         const department = req.body.department
         const first_letters = department.match(/\b(\w)/g).join("")
@@ -666,30 +669,56 @@ app.post("/createstudent", async (req, res) => {
 
         const join_letters = convert_array.join("")
 
-        const student_id = student.length + 101
+        const student_id = department_year.length + 101
         //console.log(year_of_last_two_numbers + join_letters + student_id)
 
-        joinyear = [req.body.joinyear].join("")
-        //console.log(joinyear)
 
-        req.body.year_of_study = currentYear.getFullYear() - joinyear + "Year"
-        //console.log(req.body.year_of_study)
+        const month = currentYear.getMonth() + 1
+        //console.log("month:" + month)
 
-        if (student.length === 0  && phone.length === 0 && email.length === 0) {
+        const year = currentYear.getFullYear()
+        //console.log("year:" + year)
+
+        const monthyear = `${month}-${year}`
+        //console.log("monthyear:" + monthyear)
+
+        const arr = monthyear.split("-");
+        //console.log("arr:" + arr)
+
+
+        const arr1 = joinyear.split("-")
+        //console.log("arr1:" + arr1)
+
+        //console.log(arr[0] - arr1[0])
+        //console.log((arr[1] - arr1[1]) * 12 + (arr[0] - arr1[0]))
+
+        const study_month = (arr[1] - arr1[1]) * 12 + (arr[0] - arr1[0])
+
+        if (study_month <= 12) {
+            req.body.year_of_study = "1st Year"
+        } else if (study_month <= 24) {
+            req.body.year_of_study = "2nd Year"
+        } else if (study_month <= 36) {
+            req.body.year_of_study = "3rd Year"
+        } else {
+            console.log("Join year is incorrect")
+        }
+
+        if (student.length === 0 && phone.length === 0 && email.length === 0) {
 
             req.body.student_id = year_of_last_two_numbers + join_letters + student_id
             const createStudent = await db.collection("student").insertOne(req.body)
             res.json({ message: "Student created" })
 
-        } else if (student.length > 0  && phone.length === 0 && email.length === 0) {
+        } else if (student.length > 0 && phone.length === 0 && email.length === 0) {
 
             req.body.student_id = year_of_last_two_numbers + join_letters + student_id
             const createStudent = await db.collection("student").insertOne(req.body)
             res.json({ message: "Student created" })
 
-        }else{
+        } else {
 
-            res.json({message:"Phone number and email-id is already exists"})
+            res.json({ message: "Phone number and email-id is already exists" })
         }
 
         await connection.close()
@@ -703,6 +732,86 @@ app.put("/updatestudent/:studentid", async (req, res) => {
     try {
         const connection = await mongoClient.connect(URL)
         const db = connection.db("Exam_seating_arrangement")
+        const updateStudent = await db.collection("student").findOne({ _id: mongodb.ObjectId(req.params.studentid) })
+        console.log(updateStudent)
+        const phone = await db.collection("student").find({ phone: { $nin: [updateStudent.phone] } }).toArray()
+        console.log(phone)
+        const email = await db.collection("student").find({ email: { $nin: [updateStudent.email] } }).toArray()
+        console.log(email)
+        const stuphone = phone.some(ph => {
+            return ph === req.body.phone
+        })
+        console.log("stuphone" + stuphone)
+
+        const stuemail = email.some(em => {
+            return em === req.body.email
+        })
+        console.log("stuemail" + stuemail)
+
+        const department_year = await db.collection("student").find({ $and: [{ department: req.body.department }, { joinyear: req.body.joinyear }] }).toArray()
+
+        console.log(department_year.length)
+
+        const currentYear = new Date()
+
+        let joinyear = req.body.joinyear
+
+        const year_of_last_two_numbers = [joinyear].join(",").slice(4, joinyear.length)
+        console.log("twonumber:" + year_of_last_two_numbers)
+
+        const department = req.body.department
+        const first_letters = department.match(/\b(\w)/g).join("")
+
+        const convert_array = [...first_letters]
+        console.log(convert_array.splice(1, 1))
+
+        const join_letters = convert_array.join("")
+
+        const student_id = department_year.length + 101
+        console.log(year_of_last_two_numbers + join_letters + student_id)
+
+
+        const month = currentYear.getMonth() + 1
+        console.log("month:" + month)
+
+        const year = currentYear.getFullYear()
+        console.log("year:" + year)
+
+        const monthyear = `${month}-${year}`
+        console.log("monthyear:" + monthyear)
+
+        const arr = monthyear.split("-");
+        console.log("arr:" + arr)
+
+
+        const arr1 = joinyear.split("-")
+        console.log("arr1:" + arr1)
+
+        //console.log(arr[0] - arr1[0])
+        //console.log((arr[1] - arr1[1]) * 12 + (arr[0] - arr1[0]))
+
+        const study_month = (arr[1] - arr1[1]) * 12 + (arr[0] - arr1[0])
+
+        if (study_month <= 12) {
+            req.body.year_of_study = "1st Year"
+        } else if (study_month <= 24) {
+            req.body.year_of_study = "2nd Year"
+        } else if (study_month <= 36) {
+            req.body.year_of_study = "3rd Year"
+        } else {
+            console.log("Join year is incorrect")
+        }
+
+        if (!stuphone && !stuemail) {
+
+            req.body.student_id = year_of_last_two_numbers + join_letters + student_id
+            const createStudent = await db.collection("student").updateOne({ _id: mongodb.ObjectId(req.params.studentid) }, { $set: req.body })
+            res.json({ message: "Student updated" })
+
+        } else {
+
+            res.json({ message: "Phone number and email-id is already exists" })
+        }
 
         await connection.close()
     } catch (error) {
@@ -715,7 +824,21 @@ app.get("/getstudent", async (req, res) => {
     try {
         const connection = await mongoClient.connect(URL)
         const db = connection.db("Exam_seating_arrangement")
+        const getStudent = await db.collection("student").find().toArray()
+        res.json(getStudent)
+        await connection.close()
+    } catch (error) {
+        res.status(500).json({ message: "Get student error" })
+    }
+})
 
+//GET ONE DEPARTMENT AND ONE YEAR_OF_STUDY
+app.get("/getstudent/:department/:yearofstudy", async (req, res) => {
+    try {
+        const connection = await mongoClient.connect(URL)
+        const db = connection.db("Exam_seating_arrangement")
+        const getStudent = await db.collection("student").find({ $and: [{ department: req.params.department }, { year_of_study: req.params.yearofstudy }] }).toArray()
+        res.json(getStudent)
         await connection.close()
     } catch (error) {
         res.status(500).json({ message: "Get student error" })
@@ -723,11 +846,12 @@ app.get("/getstudent", async (req, res) => {
 })
 
 //DELETE STUDENT
-app.delete("/deletestudent", async (req, res) => {
+app.delete("/deletestudent/:studentid", async (req, res) => {
     try {
         const connection = await mongoClient.connect(URL)
         const db = connection.db("Exam_seating_arrangement")
-
+        const deletestudent = await db.collection("student").deleteOne({_id:mongodb.ObjectId(req.params.studentid)})
+        res.json({message:"Student deleted"})
         await connection.close()
     } catch (error) {
         res.status(500).json({ message: "Delete student error" })
