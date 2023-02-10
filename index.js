@@ -850,8 +850,8 @@ app.delete("/deletestudent/:studentid", async (req, res) => {
     try {
         const connection = await mongoClient.connect(URL)
         const db = connection.db("Exam_seating_arrangement")
-        const deletestudent = await db.collection("student").deleteOne({_id:mongodb.ObjectId(req.params.studentid)})
-        res.json({message:"Student deleted"})
+        const deletestudent = await db.collection("student").deleteOne({ _id: mongodb.ObjectId(req.params.studentid) })
+        res.json({ message: "Student deleted" })
         await connection.close()
     } catch (error) {
         res.status(500).json({ message: "Delete student error" })
@@ -867,6 +867,113 @@ app.post("/createexam", async (req, res) => {
     try {
         const connection = await mongoClient.connect(URL)
         const db = connection.db("Exam_seating_arrangement")
+        const findhall = await db.collection("hall").find().toArray()
+
+        const hallindex = findhall.findIndex(hall => {
+            return hall.hall === req.body.hall
+        })
+
+        const totalseat = findhall[hallindex].number_of_seats
+        console.log("seats:" + findhall[hallindex].number_of_seats)
+
+        // const checkhall = findhall.some(hall => {
+        //     return hall.hall === req.body.hall
+        // })
+
+        // console.log("checkhall:" + checkhall)
+
+        // const studentDepartment = await db.collection("student").find().toArray()
+
+        // const stuid = studentDepartment.findIndex(student =>{
+        //     return student.student_id === req.body.students
+        // })
+        // console.log(stuid)
+        // console.log( req.body.students)
+
+        // const findstudent = await db.collection("exam").find({ students: { student_id: req.body.student_id } }).toArray()
+        // console.log("findstudent:" + findstudent)
+
+        const findall = await db.collection("exam").find().toArray()
+
+        const findexam = await db.collection("exam").find({ hall: req.body.hall }).toArray()
+        const finddate = await db.collection("exam").find({ date: req.body.date }).toArray()
+        console.log("finddate:" + finddate.length)
+
+        const checkdate = finddate.some(date => {
+            return date.date === req.body.date
+        })
+        console.log("checkdate: "+checkdate)
+
+        let stulength = finddate.map(stu => {
+            return stu.students.length
+        })
+        console.log("exam_student_length:" + stulength)
+
+
+
+const findstudent = finddate.some(stu=>{
+    // console.log(stu.students[0].student_id)
+    // console.log(req.body.students)
+    // console.log(req.body.students[0].student_id)
+    return stu.students[0].student_id === req.body.students[0].student_id
+})
+console.log("findstudent: "+findstudent)
+
+        const findstartime = await db.collection("exam").find({ start_time: req.body.start_time }).toArray()
+        //console.log("findstartime:"+findstartime)
+
+        const findendtime = await db.collection("exam").find({ end_time: req.body.end_time }).toArray()
+        //console.log("findendtime:"+findendtime)
+
+
+
+        if (checkdate ) {
+
+            if (finddate.length === 1 && findstartime && findendtime && stulength < totalseat && !findstudent) {
+
+                console.log("lengthnotempty:" + findexam.length)
+                const exam = await db.collection("exam").updateOne({ date: req.body.date },
+                    {
+                        $push:
+                        {
+                            students:
+                                req.body.students[0]
+                        }
+                    })
+
+                res.json({ message: "Exam Hall Created Successfully" })
+
+            }
+            // else if (findexam.length === 0 && stulength < totalseat) {
+
+            //     console.log("lengthempty:" + findexam.length)
+            //     const exam = await db.collection("exam").insertOne(req.body)
+            //     res.json({ message: "Exam Hall Created Successfully" })
+
+            // } 
+            else {
+
+                res.json({ message: "1 seats are not available and invalid hallno and student is already exists" })
+
+            }
+        } else {
+
+            console.log(findexam.length)
+            console.log(stulength)
+            console.log(totalseat)
+            if (finddate.length === 0 && stulength < totalseat && !findstudent) {
+
+                console.log("lengthempty:" + findexam.length)
+                const exam = await db.collection("exam").insertOne(req.body)
+                res.json({ message: "Exam Hall Created Successfully" })
+            } else {
+
+                res.json({ message: "0 seats are not available and invalid hallno and student is already exists" })
+
+            }
+        }
+
+
 
         await connection.close()
     } catch (error) {
@@ -891,7 +998,8 @@ app.get("/getexam", async (req, res) => {
     try {
         const connection = await mongoClient.connect(URL)
         const db = connection.db("Exam_seating_arrangement")
-
+        const exam = await db.collection("exam").find().toArray()
+        res.json(exam)
         await connection.close()
     } catch (error) {
         res.status(500).json({ message: "Get exam error" })
