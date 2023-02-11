@@ -481,6 +481,24 @@ app.get("/gethall", async (req, res) => {
     }
 })
 
+//GET THE ONE HALL DETAIL
+app.get("/gethall/:block", async (req, res) => {
+    try {
+        const connection = await mongoClient.connect(URL)
+        const db = connection.db("Exam_seating_arrangement")
+       
+        const gethall = await db.collection("hall").find({block:req.params.block}).toArray()
+        if(gethall.length > 0){
+            res.json(gethall)
+        }else{
+            res.json({message:"Block is not found"})
+        }
+       
+        await connection.close()
+    } catch (error) {
+        res.status(500).json({ message: "gethall error" })
+    }
+})
 //UPDATE THE HALL DETAILS
 app.put("/updatehall/:hallid", async (req, res) => {
     try {
@@ -626,6 +644,18 @@ app.get("/getstaff", async (req, res) => {
     }
 })
 
+//GET ONE STAFF DETAIL
+app.get("/getstaff/:staffid", async (req, res) => {
+    try {
+        const connection = await mongoClient.connect(URL)
+        const db = connection.db("Exam_seating_arrangement")
+        const getStaff = await db.collection("staff").findOne({_id:mongodb.ObjectId(req.params.staffid)})
+        res.json(getStaff)
+        await connection.close()
+    } catch (error) {
+        res.status(500).json({ message: "Get Staff Error" })
+    }
+})
 //DELETE STAFF DETAILS
 app.delete("/deletestaff/:staffid", async (req, res) => {
     try {
